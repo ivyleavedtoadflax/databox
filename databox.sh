@@ -29,6 +29,11 @@ case $key in
     SNAPSHOT_ID="$2"
     shift # past argument
     ;;
+    -c|--create_snapshot)
+    CREATE_SNAPSHOT="1"
+    shift # past argument
+    ;;
+	  # unknown option
     -p|--playbook)
     PLAYBOOK="$2"
     shift # past argument
@@ -87,9 +92,15 @@ case "$1" in
     ansible-playbook -i "$DATABOX_IP," -K "$PLAYBOOK" -u ubuntu
     ;;
 "down") echo  "Destroying DataBox"
+
     # If I don't specify the region use a default value
+    
     if [ -z "${REGION+x}" ]; then
         export REGION="eu-west-2"
+    fi
+
+    if [ -z "${CREATE_SNAPSHOT+x}" ]; then
+        export CREATE_SNAPSHOT=""
     fi
 
     # Get DataBox IP from state after the script completes
@@ -98,9 +109,10 @@ case "$1" in
     # Run ansible teardown tasks
     ansible-playbook -i "$DATABOX_IP," -K playbooks/teardown.yml -u ubuntu
     
-    terraform destroy --var aws_region=$REGION
+    terraform destroy --var aws_region=$REGION --var create_snapshot=$CREATE_SNAPSHOT
     ;;
 *)  echo "DataBox - create and destroy AWS instances for Data Science"
+    echo ""
     echo "./databox.sh up - Create a DataBox"
     echo " -- options -- "
     echo "  -r|--region - AWS region"
@@ -111,4 +123,8 @@ case "$1" in
     echo "  -p|--playbook - Ansible playbook for post deployment tasks"
     echo "  -s|--snapshot_id - Id of the snapshot from which to create volume"
     echo "./databox.sh down - Destroy the DataBox"
+    echo " -- options -- "
+    echo "  -r|--region          - Must match region specified at creation"
+    echo "  -c|--create_snapshot - Set this to 1 to create a snapshot of"
+    echo "			 the mounted volume prior to destruction."
 esac
