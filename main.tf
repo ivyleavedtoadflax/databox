@@ -2,7 +2,7 @@ variable "aws_region" { default = "eu-west-2" } # London
 variable "username" { default = "databoxuser"}
 variable "instance_type" { default = "t2.micro" }
 variable "volume_size" { default = "40" }
-variable "profile" { default = "gds-data" }
+variable "profile" { default = "" }
 variable "create_snapshot" { default = "" }
 variable "snapshot_id" {
   default = ""
@@ -24,18 +24,16 @@ provider "aws" {
     profile = "${var.profile}"
 }
 
+
 resource "aws_security_group" "allow_ssh_from_gds" {
   name_prefix = "DataBox-SecurityGroup-SSH"
-  description = "Allow inbound SSH traffic from GDS IPs"
+  description = "Allow inbound SSH traffic from SSH only"
 
   ingress = {
     from_port = 22
     to_port = 22
     protocol = "tcp"
-    cidr_blocks = [
-        "213.86.153.212/32", "213.86.153.213/32", "213.86.153.214/32",
-        "213.86.153.235/32", "213.86.153.236/32", "213.86.153.237/32",
-        "85.133.67.244/32"]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
