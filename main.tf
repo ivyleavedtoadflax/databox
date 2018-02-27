@@ -1,9 +1,10 @@
-variable "aws_region" { default = "eu-west-2" } # London
+variable "aws_region" { default = "eu-west-1" } # Ireland
 variable "username" { default = "databoxuser"}
 variable "instance_type" { default = "t2.micro" }
 variable "volume_size" { default = "40" }
-variable "profile" { default = "" }
+variable "profile" { default = "deeplearning" }
 variable "create_snapshot" { default = "" }
+variable "local_ip" { default = "" }
 variable "snapshot_id" {
   default = ""
   description = "Specify a snapshot_id to be used when creating the EBS Volume. Note that this snapshot must be in the same region as the instance, and must be the same size or smaller than the volume as specified in volume_size."
@@ -25,7 +26,7 @@ provider "aws" {
 }
 
 
-resource "aws_security_group" "allow_ssh_from_gds" {
+resource "aws_security_group" "allow_ssh_only" {
   name_prefix = "DataBox-SecurityGroup-SSH"
   description = "Allow inbound SSH traffic from SSH only"
 
@@ -33,7 +34,7 @@ resource "aws_security_group" "allow_ssh_from_gds" {
     from_port = 22
     to_port = 22
     protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${var.local_ip}/22"]
   }
 }
 
@@ -70,7 +71,7 @@ resource "aws_instance" "box" {
     availability_zone = "${var.aws_region}a"
     instance_type = "${var.instance_type}"
     security_groups = [
-        "${aws_security_group.allow_ssh_from_gds.name}",
+        "${aws_security_group.allow_ssh_only.name}",
         "${aws_security_group.allow_all_outbound.name}"
         ]
     key_name = "${aws_key_pair.auth.key_name}"
