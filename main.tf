@@ -4,7 +4,7 @@ variable "instance_type" { default = "t2.micro" }
 variable "volume_size" { default = "40" }
 variable "profile" { default = "deeplearning" }
 variable "create_snapshot" { default = "" }
-variable "local_ip" { default = "" }
+variable "local_ip" { default = "0.0.0.0/0" }
 variable "snapshot_id" {
   default = ""
   description = "Specify a snapshot_id to be used when creating the EBS Volume. Note that this snapshot must be in the same region as the instance, and must be the same size or smaller than the volume as specified in volume_size."
@@ -34,7 +34,7 @@ resource "aws_security_group" "allow_ssh_only" {
     from_port = 22
     to_port = 22
     protocol = "tcp"
-    cidr_blocks = ["${var.local_ip}/22"]
+    cidr_blocks = ["${var.local_ip}"]
   }
 }
 

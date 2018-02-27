@@ -33,9 +33,12 @@ case $key in
     CREATE_SNAPSHOT="1"
     shift # past argument
     ;;
-	  # unknown option
     -p|--playbook)
     PLAYBOOK="$2"
+    shift # past argument
+    ;;
+    -l|--local_ip)
+    LOCAL_IP="$2"
     shift # past argument
     ;;
             # unknown option
@@ -50,7 +53,7 @@ case "$1" in
 "up") echo "Creating DataBox"
     # If I don't specify the region use a default value
     if [ -z "${REGION+x}" ]; then
-        export REGION="eu-west-2"
+        export REGION="eu-west-1"
     fi
 
     # If I don't specify the username get it from logged in user
@@ -65,7 +68,7 @@ case "$1" in
 
     # If I don't specify the volume size use a default value
     if [ -z "${VOLUME_SIZE+x}" ]; then
-        export VOLUME_SIZE="40"
+        export VOLUME_SIZE="20"
     fi
 
     # If I don't specify the AMI id set it to empty string
@@ -80,10 +83,14 @@ case "$1" in
 
     # If I don't specify a custom playback set it to the default: databox.yml
     if [ -z "${PLAYBOOK+x}" ]; then
-        export PLAYBOOK="playbooks/databox.yml"
+        export PLAYBOOK="playbooks/default.yml"
+    fi
+    # If I don't specify an ip address to allow for ingres, look up my local ip
+    if [ -z "${LOCAL_IP+x}" ]; then
+        export LOCAL_IP="0.0.0.0/0"
     fi
     # Launch Terraform passing that user as parameter
-    terraform apply --var username=$USERNAME --var aws_region=$REGION --var instance_type=$INSTANCE --var volume_size=$VOLUME_SIZE --var ami_id=$AMI_ID --var snapshot_id=$SNAPSHOT_ID
+    terraform apply --var username=$USERNAME --var aws_region=$REGION --var instance_type=$INSTANCE --var volume_size=$VOLUME_SIZE --var ami_id=$AMI_ID --var snapshot_id=$SNAPSHOT_ID --var local_ip=$LOCAL_IP/32
 
     # Get DataBox IP from state after the script completes
     export DATABOX_IP=`terraform output ec2_ip`
@@ -96,7 +103,7 @@ case "$1" in
     # If I don't specify the region use a default value
     
     if [ -z "${REGION+x}" ]; then
-        export REGION="eu-west-2"
+        export REGION="eu-west-1"
     fi
 
     if [ -z "${CREATE_SNAPSHOT+x}" ]; then
@@ -122,6 +129,8 @@ case "$1" in
     echo "  -a|--ami_id - AMI id"
     echo "  -p|--playbook - Ansible playbook for post deployment tasks"
     echo "  -s|--snapshot_id - Id of the snapshot from which to create volume"
+    echo "  -l|--local_ip - Local IP address to use for limiting access to instance"
+    echo "                Defaults to all open. Use 'curl ipinfo.ip' to get local IP"
     echo "./databox.sh down - Destroy the DataBox"
     echo " -- options -- "
     echo "  -r|--region          - Must match region specified at creation"
