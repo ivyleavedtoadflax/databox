@@ -21,3 +21,9 @@
         src: /dev/xvdh
         fstype: ext4
         state: mounted
+
+    - name: set owner of /data
+      file:
+        path: /data
+        owner: ubuntu
+        group: ubuntu
